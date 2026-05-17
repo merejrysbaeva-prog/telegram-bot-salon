@@ -11,7 +11,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 # =======================
 pdfmetrics.registerFont(TTFont("DejaVu", "DejaVuSans.ttf"))
 
-TOKEN = "8621719092:AAG4vCm6TkAkouydpForwtc4e3412vH2Ls4"
+import os
+
+TOKEN = os.getenv("TOKEN")
 
 # =======================
 # DB
@@ -566,4 +568,5 @@ app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
-app.run_polling()
+if __name__ == "__main__":
+    app.run_polling(drop_pending_updates=True)
