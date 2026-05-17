@@ -1,3 +1,8 @@
+import os
+
+TOKEN = os.getenv("TOKEN")
+print("TOKEN =", TOKEN)
+
 import sqlite3
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
@@ -10,11 +15,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 # FONT
 # =======================
 pdfmetrics.registerFont(TTFont("DejaVu", "DejaVuSans.ttf"))
-
-import os
-
-TOKEN = os.getenv("TOKEN")
-
 # =======================
 # DB
 # =======================
