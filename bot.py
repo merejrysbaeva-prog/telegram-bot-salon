@@ -49,18 +49,12 @@ def role_keyboard():
         resize_keyboard=True
     )
 
-def menu():
+def main_menu():
     return ReplyKeyboardMarkup(
         [["📋 Чек-лист"],
          ["📄 Регламент PDF"],
          ["📄 Должностная инструкция PDF"],
-         ["🔙 Сменить роль"]],
-        resize_keyboard=True
-    )
-
-def home_back_menu():
-    return ReplyKeyboardMarkup(
-        [["🏠 Домой", "🔙 Назад"]],
+         ["🔄 Сменить роль"]],
         resize_keyboard=True
     )
 
@@ -72,12 +66,15 @@ def checklist_menu():
          ["4. Взаимодействие с персоналом"],
          ["5. Обратная связь"],
          ["6. Закрытие"],
-         ["🏠 Домой"]],
+         ["🔙 Назад"]],
         resize_keyboard=True
     )
 
 def back_menu():
-    return ReplyKeyboardMarkup([["🔙 Назад"]], resize_keyboard=True)
+    return ReplyKeyboardMarkup(
+        [["🔙 Назад"]],
+        resize_keyboard=True
+    )
 
 
 # =======================
@@ -536,30 +533,38 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
+    user_id = update.message.from_user.id
 
     # roles
     if text in ["💅 Маникюр", "💇 Парикмахер", "💄 Визажист", "👩‍💼 Админ"]:
-        set_role(update.message.from_user.id, text)
-        await update.message.reply_text("Роль сохранена", reply_markup=menu())
+        set_role(user_id, text)
+        await update.message.reply_text("Роль сохранена", reply_markup=main_menu())
 
-    # checklist open
+    # HOME
+    elif text == "🏠 Домой":
+        await update.message.reply_text("Главное меню:", reply_markup=main_menu())
+
+    # CHECKLIST OPEN
     elif text == "📋 Чек-лист":
         await update.message.reply_text("Выбери раздел:", reply_markup=checklist_menu())
 
-    # back from checklist
+    # BACK
     elif text == "🔙 Назад":
-        await update.message.reply_text("Меню:", reply_markup=menu())
-
-        
+        await update.message.reply_text("Назад:", reply_markup=main_menu())
 
     # checklist items
     elif text in CHECKLIST:
         await update.message.reply_text(CHECKLIST[text], reply_markup=back_menu())
 
-    # PDFs
+    # PDFs (только админ регламент)
     elif text == "📄 Регламент PDF":
-        file = make_pdf("reglament.pdf", REGULATION_TEXT)
-        await update.message.reply_document(open(file, "rb"))
+        role = get_role(user_id)
+
+        if role == "👩‍💼 Админ":
+            file = make_pdf("reglament.pdf", REGULATION_TEXT)
+            await update.message.reply_document(open(file, "rb"))
+        else:
+            await update.message.reply_text("Нет доступа к регламенту")
 
     elif text == "📄 Должностная инструкция PDF":
         file = make_pdf("dolzhnost_admin.pdf", JOB_TEXT)
@@ -567,7 +572,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     else:
         await update.message.reply_text("Используй кнопки")
-
+        
 
 # =======================
 # RUN BOT
@@ -578,3 +583,11 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
 if __name__ == "__main__":
     app.run_polling(drop_pending_updates=True)
+
+import logging
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
+
